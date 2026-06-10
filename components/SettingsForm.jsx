@@ -3,7 +3,36 @@ import { useState } from 'react'
 
 const KEYWORD_PRESETS = ['AI', 'GUIDE', 'LINK', 'YES', 'FREE', 'INFO']
 
+const MANYCHAT_STEPS = [
+  {
+    n: 1,
+    title: 'Create a ManyChat account',
+    body: 'Go to manychat.com → sign up free → connect your Instagram account.',
+  },
+  {
+    n: 2,
+    title: 'Create a new Flow',
+    body: 'In ManyChat → Flows → New Flow. Name it e.g. "Comment AI → DM".',
+  },
+  {
+    n: 3,
+    title: 'Add Instagram Comments trigger',
+    body: 'Click "+ Add Trigger" → Instagram → User Comments on Post/Reel → enter your keyword (e.g. AI).',
+  },
+  {
+    n: 4,
+    title: 'Add a Dynamic Block action',
+    body: 'In the flow → Add Action → "External Request" → paste the Dynamic Content URL below.',
+  },
+  {
+    n: 5,
+    title: 'Set the response as the DM',
+    body: 'Set Method = POST. ManyChat will use the response from your app as the DM message. Save and publish.',
+  },
+]
+
 export default function SettingsForm({ initial }) {
+  const [mode, setMode] = useState('manychat') // 'manychat' | 'meta'
   const [form, setForm] = useState({
     triggerKeyword: initial.triggerKeyword || 'AI',
     dmMessage: initial.dmMessage || '',
@@ -12,17 +41,19 @@ export default function SettingsForm({ initial }) {
     verifyToken: initial.verifyToken || '',
   })
   const [account, setAccount] = useState(
-    initial.connectedUsername ? { username: initial.connectedUsername, profilePicture: initial.connectedPicture } : null
+    initial.connectedUsername
+      ? { username: initial.connectedUsername, profilePicture: initial.connectedPicture }
+      : null
   )
   const [saving, setSaving] = useState(false)
   const [verifying, setVerifying] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
-  const [copied, setCopied] = useState(false)
+  const [copied, setCopied] = useState(null)
 
-  const webhookUrl = typeof window !== 'undefined'
-    ? `${window.location.origin}/api/webhook`
-    : ''
+  const origin = typeof window !== 'undefined' ? window.location.origin : ''
+  const webhookUrl = `${origin}/api/webhook`
+  const manychatUrl = `${origin}/api/manychat`
 
   async function handleSave(e) {
     e.preventDefault()
@@ -70,10 +101,10 @@ export default function SettingsForm({ initial }) {
     }
   }
 
-  function copyWebhook() {
-    navigator.clipboard.writeText(webhookUrl)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+  function copy(text, key) {
+    navigator.clipboard.writeText(text)
+    setCopied(key)
+    setTimeout(() => setCopied(null), 2000)
   }
 
   return (
@@ -83,7 +114,7 @@ export default function SettingsForm({ initial }) {
         <div className="inline-flex items-center gap-3 mb-1">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 flex items-center justify-center shadow-lg">
             <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+              <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
             </svg>
           </div>
           <h1 className="text-2xl font-bold text-gray-900">IG Auto Reply</h1>
@@ -91,24 +122,30 @@ export default function SettingsForm({ initial }) {
         <p className="text-gray-400 text-sm">Comment → DM Automation Dashboard</p>
       </div>
 
-      {/* Webhook URL */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-        <h2 className="text-xs font-semibold text-gray-400 mb-3 uppercase tracking-widest">Webhook URL</h2>
-        <div className="flex gap-2">
-          <input
-            readOnly
-            value={webhookUrl}
-            className="flex-1 bg-gray-50 rounded-xl px-3 py-2 text-sm font-mono text-gray-500 border border-gray-100 select-all"
-          />
-          <button
-            type="button"
-            onClick={copyWebhook}
-            className="px-4 py-2 bg-gray-900 text-white text-sm rounded-xl hover:bg-gray-700 transition-colors font-medium"
-          >
-            {copied ? '✓' : 'Copy'}
-          </button>
-        </div>
-        <p className="text-xs text-gray-400 mt-2">Paste this into your Meta Developer app → Webhooks</p>
+      {/* Mode toggle */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-2 flex gap-2">
+        <button
+          type="button"
+          onClick={() => setMode('manychat')}
+          className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+            mode === 'manychat'
+              ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-sm'
+              : 'text-gray-400 hover:text-gray-600'
+          }`}
+        >
+          ManyChat (Recommended)
+        </button>
+        <button
+          type="button"
+          onClick={() => setMode('meta')}
+          className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+            mode === 'meta'
+              ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-sm'
+              : 'text-gray-400 hover:text-gray-600'
+          }`}
+        >
+          Meta API
+        </button>
       </div>
 
       <form onSubmit={handleSave} className="space-y-5">
@@ -153,79 +190,148 @@ export default function SettingsForm({ initial }) {
           <p className="text-xs text-gray-400 mt-1.5">{form.dmMessage.length} / 1000 characters</p>
         </div>
 
-        {/* Verify Token */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-          <h2 className="text-xs font-semibold text-gray-400 mb-3 uppercase tracking-widest">Webhook Verify Token</h2>
-          <input
-            type="text"
-            value={form.verifyToken}
-            onChange={e => setForm({ ...form, verifyToken: e.target.value })}
-            placeholder="Any secret string, e.g. mysecret123"
-            className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-400 text-sm"
-          />
-          <p className="text-xs text-gray-400 mt-1.5">Must match the verify token you set in your Meta app</p>
-        </div>
+        {/* ManyChat Mode */}
+        {mode === 'manychat' && (
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 space-y-5">
+            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest">ManyChat Setup</h2>
 
-        {/* Connected Account */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-          <h2 className="text-xs font-semibold text-gray-400 mb-3 uppercase tracking-widest">Connected Account</h2>
+            {/* Dynamic Content URL */}
+            <div>
+              <label className="text-xs text-gray-500 mb-1.5 block font-medium">Your Dynamic Content URL</label>
+              <div className="flex gap-2">
+                <input
+                  readOnly
+                  value={manychatUrl}
+                  className="flex-1 bg-gray-50 rounded-xl px-3 py-2 text-sm font-mono text-gray-500 border border-gray-100 select-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => copy(manychatUrl, 'manychat')}
+                  className="px-4 py-2 bg-gray-900 text-white text-sm rounded-xl hover:bg-gray-700 transition-colors font-medium"
+                >
+                  {copied === 'manychat' ? '✓' : 'Copy'}
+                </button>
+              </div>
+              <p className="text-xs text-gray-400 mt-1.5">Paste this into ManyChat → Flow → External Request</p>
+            </div>
 
-          {account && (
-            <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl mb-4 border border-green-100">
-              {account.profilePicture ? (
-                <img src={account.profilePicture} alt="" className="w-10 h-10 rounded-full ring-2 ring-white shadow" />
+            {/* Step by step */}
+            <div className="space-y-3">
+              {MANYCHAT_STEPS.map(step => (
+                <div key={step.n} className="flex gap-3">
+                  <div className="w-6 h-6 rounded-full bg-purple-100 text-purple-600 text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
+                    {step.n}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-800">{step.title}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">{step.body}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <a
+              href="https://manychat.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 w-full py-2.5 border-2 border-dashed border-purple-200 text-purple-500 rounded-xl text-sm font-semibold hover:bg-purple-50 hover:border-purple-300 transition-all"
+            >
+              Open ManyChat →
+            </a>
+          </div>
+        )}
+
+        {/* Meta API Mode */}
+        {mode === 'meta' && (
+          <div className="space-y-5">
+            {/* Webhook URL */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+              <h2 className="text-xs font-semibold text-gray-400 mb-3 uppercase tracking-widest">Webhook URL</h2>
+              <div className="flex gap-2">
+                <input
+                  readOnly
+                  value={webhookUrl}
+                  className="flex-1 bg-gray-50 rounded-xl px-3 py-2 text-sm font-mono text-gray-500 border border-gray-100 select-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => copy(webhookUrl, 'webhook')}
+                  className="px-4 py-2 bg-gray-900 text-white text-sm rounded-xl hover:bg-gray-700 transition-colors font-medium"
+                >
+                  {copied === 'webhook' ? '✓' : 'Copy'}
+                </button>
+              </div>
+              <p className="text-xs text-gray-400 mt-1.5">Paste into Meta Developer app → Webhooks</p>
+            </div>
+
+            {/* Verify Token */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+              <h2 className="text-xs font-semibold text-gray-400 mb-3 uppercase tracking-widest">Webhook Verify Token</h2>
+              <input
+                type="text"
+                value={form.verifyToken}
+                onChange={e => setForm({ ...form, verifyToken: e.target.value })}
+                placeholder="Any secret string, e.g. mysecret123"
+                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-400 text-sm"
+              />
+              <p className="text-xs text-gray-400 mt-1.5">Must match the verify token you set in Meta Developer app</p>
+            </div>
+
+            {/* Connected Account */}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+              <h2 className="text-xs font-semibold text-gray-400 mb-3 uppercase tracking-widest">Connected Account</h2>
+              {account ? (
+                <div className="flex items-center gap-3 p-3 bg-green-50 rounded-xl border border-green-100">
+                  {account.profilePicture ? (
+                    <img src={account.profilePicture} alt="" className="w-10 h-10 rounded-full ring-2 ring-white shadow" />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white font-bold text-sm">
+                      {account.username?.[0]?.toUpperCase()}
+                    </div>
+                  )}
+                  <div>
+                    <p className="font-semibold text-gray-900 text-sm">@{account.username}</p>
+                    <p className="text-xs text-green-600 font-medium">✓ Verified & connected</p>
+                  </div>
+                  <button type="button" onClick={() => setAccount(null)} className="ml-auto text-xs text-gray-400 hover:text-gray-600">
+                    Change
+                  </button>
+                </div>
               ) : (
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-400 flex items-center justify-center text-white font-bold text-sm">
-                  {account.username?.[0]?.toUpperCase()}
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-xs text-gray-500 mb-1.5 block font-medium">Instagram Account ID</label>
+                    <input
+                      type="text"
+                      value={form.accountId}
+                      onChange={e => setForm({ ...form, accountId: e.target.value })}
+                      placeholder="Numeric IG Business Account ID"
+                      className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-400 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-500 mb-1.5 block font-medium">Meta Access Token</label>
+                    <input
+                      type="password"
+                      value={form.accessToken}
+                      onChange={e => setForm({ ...form, accessToken: e.target.value })}
+                      placeholder="Your long-lived Meta access token"
+                      className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-400 text-sm"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleVerify}
+                    disabled={!form.accessToken || !form.accountId || verifying}
+                    className="w-full py-2.5 border-2 border-dashed border-purple-200 text-purple-500 rounded-xl text-sm font-semibold hover:bg-purple-50 hover:border-purple-300 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    {verifying ? 'Verifying...' : '+ Verify & Connect Account'}
+                  </button>
                 </div>
               )}
-              <div>
-                <p className="font-semibold text-gray-900 text-sm">@{account.username}</p>
-                <p className="text-xs text-green-600 font-medium">✓ Verified & connected</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setAccount(null)}
-                className="ml-auto text-xs text-gray-400 hover:text-gray-600"
-              >
-                Change
-              </button>
             </div>
-          )}
-
-          {!account && (
-            <div className="space-y-3">
-              <div>
-                <label className="text-xs text-gray-500 mb-1.5 block font-medium">Instagram Account ID</label>
-                <input
-                  type="text"
-                  value={form.accountId}
-                  onChange={e => setForm({ ...form, accountId: e.target.value })}
-                  placeholder="Numeric IG Business Account ID"
-                  className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-400 text-sm"
-                />
-              </div>
-              <div>
-                <label className="text-xs text-gray-500 mb-1.5 block font-medium">Meta Access Token</label>
-                <input
-                  type="password"
-                  value={form.accessToken}
-                  onChange={e => setForm({ ...form, accessToken: e.target.value })}
-                  placeholder="Your long-lived Meta access token"
-                  className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-400 text-sm"
-                />
-              </div>
-              <button
-                type="button"
-                onClick={handleVerify}
-                disabled={!form.accessToken || !form.accountId || verifying}
-                className="w-full py-2.5 border-2 border-dashed border-purple-200 text-purple-500 rounded-xl text-sm font-semibold hover:bg-purple-50 hover:border-purple-300 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                {verifying ? 'Verifying...' : '+ Verify & Connect Account'}
-              </button>
-            </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 text-sm flex items-center gap-2">
@@ -242,7 +348,7 @@ export default function SettingsForm({ initial }) {
         </button>
       </form>
 
-      <p className="text-center text-xs text-gray-300 pb-4">IG Auto Reply · Powered by Meta Graph API</p>
+      <p className="text-center text-xs text-gray-300 pb-4">IG Auto Reply · Powered by ManyChat + Vercel</p>
     </div>
   )
 }
