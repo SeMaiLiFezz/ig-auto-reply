@@ -1,0 +1,9 @@
+{
+  "name": "ig-auto-reply",
+  "version": "1.0.0",
+  "description": "Instagram comment-to-DM automation via Meta Graph API",
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  }
+}
