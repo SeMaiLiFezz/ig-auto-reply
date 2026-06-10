@@ -1,8 +1,0 @@
-{
-  "/_global-error/page": "/_global-error",
-  "/_not-found/page": "/_not-found",
-  "/api/settings/route": "/api/settings",
-  "/api/verify-account/route": "/api/verify-account",
-  "/api/webhook/route": "/api/webhook",
-  "/page": "/"
-}
