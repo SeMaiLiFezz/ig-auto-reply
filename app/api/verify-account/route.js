@@ -4,8 +4,10 @@ export async function POST(req) {
   const { accessToken, accountId } = await req.json()
 
   try {
+    // Instagram Login API: the token identifies the account, so query /me.
+    // accountId is accepted for backward-compat but not required.
     const res = await fetch(
-      `https://graph.facebook.com/v21.0/${accountId}?fields=name,username,profile_picture_url&access_token=${accessToken}`
+      `https://graph.instagram.com/v21.0/me?fields=user_id,username,name,profile_picture_url&access_token=${accessToken}`
     )
     const data = await res.json()
 

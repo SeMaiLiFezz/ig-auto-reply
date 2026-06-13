@@ -81,7 +81,7 @@ export default function SettingsForm({ initial }) {
   }
 
   async function handleVerify() {
-    if (!form.accessToken || !form.accountId) return
+    if (!form.accessToken) return
     setVerifying(true)
     setError('')
     try {
@@ -261,7 +261,7 @@ export default function SettingsForm({ initial }) {
                   {copied === 'webhook' ? '✓' : 'Copy'}
                 </button>
               </div>
-              <p className="text-xs text-gray-400 mt-1.5">Paste into Meta Developer app → Webhooks</p>
+              <p className="text-xs text-gray-400 mt-1.5">Paste into Meta app → Instagram → Webhooks (subscribe to the "comments" field)</p>
             </div>
 
             {/* Verify Token */}
@@ -300,29 +300,30 @@ export default function SettingsForm({ initial }) {
               ) : (
                 <div className="space-y-3">
                   <div>
-                    <label className="text-xs text-gray-500 mb-1.5 block font-medium">Instagram Account ID</label>
-                    <input
-                      type="text"
-                      value={form.accountId}
-                      onChange={e => setForm({ ...form, accountId: e.target.value })}
-                      placeholder="Numeric IG Business Account ID"
-                      className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-400 text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs text-gray-500 mb-1.5 block font-medium">Meta Access Token</label>
+                    <label className="text-xs text-gray-500 mb-1.5 block font-medium">Instagram Access Token</label>
                     <input
                       type="password"
                       value={form.accessToken}
                       onChange={e => setForm({ ...form, accessToken: e.target.value })}
-                      placeholder="Your long-lived Meta access token"
+                      placeholder="Long-lived Instagram access token"
+                      className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-400 text-sm"
+                    />
+                    <p className="text-xs text-gray-400 mt-1.5">From your Meta app → Instagram → API setup with Instagram Login. Scopes: instagram_business_basic, instagram_business_manage_comments, instagram_business_manage_messages</p>
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-500 mb-1.5 block font-medium">Instagram Account ID <span className="text-gray-300">(optional)</span></label>
+                    <input
+                      type="text"
+                      value={form.accountId}
+                      onChange={e => setForm({ ...form, accountId: e.target.value })}
+                      placeholder="Auto-detected from token — leave blank"
                       className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-400 text-sm"
                     />
                   </div>
                   <button
                     type="button"
                     onClick={handleVerify}
-                    disabled={!form.accessToken || !form.accountId || verifying}
+                    disabled={!form.accessToken || verifying}
                     className="w-full py-2.5 border-2 border-dashed border-purple-200 text-purple-500 rounded-xl text-sm font-semibold hover:bg-purple-50 hover:border-purple-300 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     {verifying ? 'Verifying...' : '+ Verify & Connect Account'}

@@ -17,7 +17,7 @@ export async function GET(req) {
 
 export async function POST(req) {
   const body = await req.json()
-  const { triggerKeyword, dmMessage, accessToken, accountId } = await getSettings()
+  const { triggerKeyword, dmMessage, accessToken } = await getSettings()
 
   if (body.object === 'instagram') {
     for (const entry of body.entry || []) {
@@ -26,7 +26,7 @@ export async function POST(req) {
           const comment = change.value
           const text = (comment.text || '').toLowerCase().trim()
           if (text.includes((triggerKeyword || 'AI').toLowerCase())) {
-            await sendDM(comment.from.id, dmMessage, accountId, accessToken)
+            await sendDM(comment.id, dmMessage, accessToken)
           }
         }
       }
@@ -36,17 +36,18 @@ export async function POST(req) {
   return NextResponse.json({ status: 'ok' })
 }
 
-async function sendDM(recipientId, message, accountId, accessToken) {
-  const res = await fetch(`https://graph.facebook.com/v21.0/${accountId}/messages`, {
+async function sendDM(commentId, message, accessToken) {
+  // Instagram private reply: DM the author of a comment (valid up to 7 days
+  // after the comment). Uses the Instagram Login API host (graph.instagram.com).
+  const res = await fetch(`https://graph.instagram.com/v21.0/me/messages`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${accessToken}`,
     },
     body: JSON.stringify({
-      recipient: { id: recipientId },
+      recipient: { comment_id: commentId },
       message: { text: message },
-      messaging_type: 'RESPONSE',
     }),
   })
   if (!res.ok) console.error('DM send failed:', await res.text())
