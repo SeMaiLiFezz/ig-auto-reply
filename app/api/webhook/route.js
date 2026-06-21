@@ -23,6 +23,9 @@ export async function POST(req) {
   const debug = {
     receivedAt: new Date().toISOString(),
     object: body.object,
+    fields: (body.entry || []).flatMap(e => (e.changes || []).map(c => c.field)),
+    hasMessaging: (body.entry || []).some(e => Array.isArray(e.messaging)),
+    raw: body,
     matched: false,
     commentText: null,
     dmResult: null,
