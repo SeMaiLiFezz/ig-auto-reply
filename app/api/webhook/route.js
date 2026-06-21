@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getSettings } from '@/lib/store'
+import { getSettings, saveSettings } from '@/lib/store'
 
 export async function GET(req) {
   const { searchParams } = new URL(req.url)
@@ -19,18 +19,39 @@ export async function POST(req) {
   const body = await req.json()
   const { triggerKeyword, dmMessage, accessToken } = await getSettings()
 
+  // Debug record so the user can preview activity at /api/debug (and Vercel logs).
+  const debug = {
+    receivedAt: new Date().toISOString(),
+    object: body.object,
+    matched: false,
+    commentText: null,
+    dmResult: null,
+  }
+  console.log('Webhook received:', JSON.stringify(body))
+
   if (body.object === 'instagram') {
     for (const entry of body.entry || []) {
       for (const change of entry.changes || []) {
         if (change.field === 'comments') {
           const comment = change.value
           const text = (comment.text || '').toLowerCase().trim()
+          debug.commentText = comment.text || ''
           if (text.includes((triggerKeyword || 'AI').toLowerCase())) {
-            await sendDM(comment.id, dmMessage, accessToken)
+            debug.matched = true
+            debug.dmResult = await sendDM(comment.id, dmMessage, accessToken)
+          } else {
+            debug.dmResult = `no keyword match (looking for "${triggerKeyword}")`
           }
         }
       }
     }
+  }
+
+  // Persist the last event for the debug viewer (best-effort).
+  try {
+    await saveSettings({ lastWebhook: debug })
+  } catch (e) {
+    console.error('Failed to save debug record:', e.message)
   }
 
   return NextResponse.json({ status: 'ok' })
@@ -50,5 +71,11 @@ async function sendDM(commentId, message, accessToken) {
       message: { text: message },
     }),
   })
-  if (!res.ok) console.error('DM send failed:', await res.text())
+  const text = await res.text()
+  if (!res.ok) {
+    console.error('DM send failed:', text)
+    return `ERROR ${res.status}: ${text}`
+  }
+  console.log('DM sent:', text)
+  return `OK: ${text}`
 }

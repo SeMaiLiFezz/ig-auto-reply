@@ -3,36 +3,7 @@ import { useState } from 'react'
 
 const KEYWORD_PRESETS = ['AI', 'GUIDE', 'LINK', 'YES', 'FREE', 'INFO']
 
-const MANYCHAT_STEPS = [
-  {
-    n: 1,
-    title: 'Create a ManyChat account',
-    body: 'Go to manychat.com → sign up free → connect your Instagram account.',
-  },
-  {
-    n: 2,
-    title: 'Create a new Flow',
-    body: 'In ManyChat → Flows → New Flow. Name it e.g. "Comment AI → DM".',
-  },
-  {
-    n: 3,
-    title: 'Add Instagram Comments trigger',
-    body: 'Click "+ Add Trigger" → Instagram → User Comments on Post/Reel → enter your keyword (e.g. AI).',
-  },
-  {
-    n: 4,
-    title: 'Add a Dynamic Block action',
-    body: 'In the flow → Add Action → "External Request" → paste the Dynamic Content URL below.',
-  },
-  {
-    n: 5,
-    title: 'Set the response as the DM',
-    body: 'Set Method = POST. ManyChat will use the response from your app as the DM message. Save and publish.',
-  },
-]
-
 export default function SettingsForm({ initial }) {
-  const [mode, setMode] = useState('manychat') // 'manychat' | 'meta'
   const [form, setForm] = useState({
     triggerKeyword: initial.triggerKeyword || 'AI',
     dmMessage: initial.dmMessage || '',
@@ -53,7 +24,6 @@ export default function SettingsForm({ initial }) {
 
   const origin = typeof window !== 'undefined' ? window.location.origin : ''
   const webhookUrl = `${origin}/api/webhook`
-  const manychatUrl = `${origin}/api/manychat`
 
   async function handleSave(e) {
     e.preventDefault()
@@ -122,32 +92,6 @@ export default function SettingsForm({ initial }) {
         <p className="text-gray-400 text-sm">Comment → DM Automation Dashboard</p>
       </div>
 
-      {/* Mode toggle */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-2 flex gap-2">
-        <button
-          type="button"
-          onClick={() => setMode('manychat')}
-          className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-            mode === 'manychat'
-              ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-sm'
-              : 'text-gray-400 hover:text-gray-600'
-          }`}
-        >
-          ManyChat (Recommended)
-        </button>
-        <button
-          type="button"
-          onClick={() => setMode('meta')}
-          className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-            mode === 'meta'
-              ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-sm'
-              : 'text-gray-400 hover:text-gray-600'
-          }`}
-        >
-          Meta API
-        </button>
-      </div>
-
       <form onSubmit={handleSave} className="space-y-5">
         {/* Trigger Keyword */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
@@ -190,60 +134,8 @@ export default function SettingsForm({ initial }) {
           <p className="text-xs text-gray-400 mt-1.5">{form.dmMessage.length} / 1000 characters</p>
         </div>
 
-        {/* ManyChat Mode */}
-        {mode === 'manychat' && (
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 space-y-5">
-            <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest">ManyChat Setup</h2>
-
-            {/* Dynamic Content URL */}
-            <div>
-              <label className="text-xs text-gray-500 mb-1.5 block font-medium">Your Dynamic Content URL</label>
-              <div className="flex gap-2">
-                <input
-                  readOnly
-                  value={manychatUrl}
-                  className="flex-1 bg-gray-50 rounded-xl px-3 py-2 text-sm font-mono text-gray-500 border border-gray-100 select-all"
-                />
-                <button
-                  type="button"
-                  onClick={() => copy(manychatUrl, 'manychat')}
-                  className="px-4 py-2 bg-gray-900 text-white text-sm rounded-xl hover:bg-gray-700 transition-colors font-medium"
-                >
-                  {copied === 'manychat' ? '✓' : 'Copy'}
-                </button>
-              </div>
-              <p className="text-xs text-gray-400 mt-1.5">Paste this into ManyChat → Flow → External Request</p>
-            </div>
-
-            {/* Step by step */}
-            <div className="space-y-3">
-              {MANYCHAT_STEPS.map(step => (
-                <div key={step.n} className="flex gap-3">
-                  <div className="w-6 h-6 rounded-full bg-purple-100 text-purple-600 text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
-                    {step.n}
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-gray-800">{step.title}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">{step.body}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <a
-              href="https://manychat.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 w-full py-2.5 border-2 border-dashed border-purple-200 text-purple-500 rounded-xl text-sm font-semibold hover:bg-purple-50 hover:border-purple-300 transition-all"
-            >
-              Open ManyChat →
-            </a>
-          </div>
-        )}
-
-        {/* Meta API Mode */}
-        {mode === 'meta' && (
-          <div className="space-y-5">
+        {/* Meta API setup */}
+        <div className="space-y-5">
             {/* Webhook URL */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
               <h2 className="text-xs font-semibold text-gray-400 mb-3 uppercase tracking-widest">Webhook URL</h2>
@@ -332,8 +224,6 @@ export default function SettingsForm({ initial }) {
               )}
             </div>
           </div>
-        )}
-
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-600 rounded-xl px-4 py-3 text-sm flex items-center gap-2">
             <span>⚠️</span> {error}
@@ -349,7 +239,7 @@ export default function SettingsForm({ initial }) {
         </button>
       </form>
 
-      <p className="text-center text-xs text-gray-300 pb-4">IG Auto Reply · Powered by ManyChat + Vercel</p>
+      <p className="text-center text-xs text-gray-300 pb-4">IG Auto Reply · Powered by Meta API + Vercel</p>
     </div>
   )
 }
