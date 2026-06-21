@@ -31,6 +31,9 @@ export default function SettingsForm({ initial }) {
     setError('')
     try {
       const payload = { ...form }
+      // The token field starts blank on load; don't overwrite the stored token
+      // with an empty value when the user saves other settings without re-pasting it.
+      if (!payload.accessToken) delete payload.accessToken
       if (account) {
         payload.connectedUsername = account.username
         payload.connectedPicture = account.profilePicture || ''
